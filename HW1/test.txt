@@ -1,0 +1,48 @@
+191161,Administration,12
+319684,Administration,2
+331148,Administration,3
+498591,Customer Service,7
+191161,Engineering,2
+356787,Engineering,13
+407419,Engineering,9
+498591,Engineering,2
+946335,Engineering,11
+498591,Finance,2
+900581,Finance,13
+191161,Human Resource,7
+319684,Human Resource,11
+356787,Human Resource,2
+407419,Human Resource,1
+331148,Information Technology,11
+407419,Information Technology,5
+662275,Information Technology,25
+191161,Legal,11
+319684,Legal,11
+331148,Legal,10
+319684,Maintenance,14
+331148,Maintenance,10
+356787,Maintenance,10
+407419,Maintenance,7
+498591,Maintenance,4
+191161,Marketing,14
+331148,Marketing,8
+407419,Marketing,4
+191161,Production,8
+356787,Production,4
+407419,Production,4
+662275,Production,4
+900581,Production,9
+191161,Purchasing,7
+319684,Purchasing,12
+407419,Purchasing,6
+191161,Quality,1
+319684,Quality,8
+331148,Quality,6
+770487,Quality,22
+319684,Research & Development,5
+498591,Research & Development,7
+946335,Research & Development,1
+319684,Security,11
+407419,Security,4
+498591,Security,3
+900581,Security,3
