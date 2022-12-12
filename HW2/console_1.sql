@@ -18,3 +18,5 @@ WHERE FSW.hID NOT IN (SELECT R1.hID
                       FROM Reality as R1)
 GROUP BY FSW.hID
 ORDER BY FSW.hID
+
+
