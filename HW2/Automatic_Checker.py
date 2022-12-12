@@ -2,11 +2,11 @@ import pyodbc
 import csv
 import importlib
 
-IDS = "ID1_ID2"
+IDS = "206202384_204864532"
 ################################################
 SERVER_NAME = "techniondbcourse01.database.windows.net"
-DATABASE_NAME = ""
-USER_NAME = ""
+DATABASE_NAME = "shai0k"
+USER_NAME = "shai0k"
 PASSWORD = "Qwerty12!"
 ################################################
 NUMBER_OF_TESTS = 1

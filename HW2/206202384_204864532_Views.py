@@ -4,7 +4,7 @@ VIEWS_DICT = {
             AS
             SELECT H1.hID, D1.dID
             FROM Households AS H1, Devices as D1
-            WHERE H1.size >= 3 AND H1.netWorth > 5 and H1.hID = D1.hID;"""
+            WHERE H1.size >= 3 AND H1.netWorth > 5 and H1.hID = D1.hID;""",
          """CREATE VIEW Reality
             AS
             SELECT DISTINCT D2.hID, D2.dID
