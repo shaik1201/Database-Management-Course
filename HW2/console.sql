@@ -25,7 +25,6 @@ CREATE TABLE TechnicalExpert(
     FOREIGN KEY (technicalExpertID) REFERENCES Employee(employeeID) ON DELETE CASCADE
 )
 
--- We can not check if a family has at least one person
 -- We can not check the cover constraint
 CREATE TABLE Family(
     familyID INTEGER PRIMARY KEY,
@@ -63,8 +62,8 @@ CREATE TABLE DisconnectionRequest(
     disconnectionReason varchar(100),
     managerID INTEGER,
     familyID INTEGER,
-    wealthLevel INTEGER,
     FOREIGN KEY (managerID) REFERENCES Manager(managerID) ON DELETE CASCADE,
+    FOREIGN KEY (familyID) REFERENCES NormalFamily(familyID),
     PRIMARY KEY (managerID, familyID, submissionDate)
 )
 
@@ -82,10 +81,10 @@ CREATE TABLE TransferRequest(
 )
 
 CREATE TABLE DigitalConverter(
-    serialNumber INTEGER PRIMARY KEY,
+    serialNumber INTEGER,
     familyID INTEGER,
     FOREIGN KEY (familyID) REFERENCES Family(familyID) ON DELETE CASCADE,
-    UNIQUE (serialNumber,familyID)
+    PRIMARY KEY (serialNumber,familyID)
 )
 
 CREATE TABLE FixedBy(
@@ -102,7 +101,6 @@ CREATE TABLE Channel(
     channelName VARCHAR(100)
 )
 
--- ON DELETE CASCADE ???????
 CREATE TABLE DCcontainsChannel(
     channelNumber INTEGER,
     serialNumber INTEGER,
