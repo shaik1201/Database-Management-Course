@@ -7,7 +7,7 @@ CREATE TABLE Department(
 )
 
 CREATE TABLE Employee(
-    employeeID INTEGER PRIMARY KEY,
+    employeeID INTEGER PRIMARY KEY CHECK ( employeeID >= 0 ),
     employeeName VARCHAR(100),
     deptName VARCHAR(100) NOT NULL,
     FOREIGN KEY (deptName) REFERENCES Department(deptName) ON DELETE CASCADE
@@ -27,7 +27,7 @@ CREATE TABLE TechnicalExpert(
 
 -- We can not check the cover constraint
 CREATE TABLE Family(
-    familyID INTEGER PRIMARY KEY,
+    familyID INTEGER PRIMARY KEY CHECK ( familyID >= 0 ),
     familyName VARCHAR(100),
     wealthLevel INTEGER CHECK (wealthLevel BETWEEN 1 AND 9),
     UNIQUE (familyID, wealthLevel)
@@ -35,7 +35,7 @@ CREATE TABLE Family(
 
 CREATE TABLE Person(
     firstName VARCHAR(100),
-    personPhoneNumber INTEGER,
+    personPhoneNumber INTEGER CHECK ( employeeID >= 0 ),
     personBirthDate VARCHAR(100),
     familyID INTEGER,
     FOREIGN KEY (familyID) REFERENCES Family(familyID) ON DELETE CASCADE,
@@ -57,9 +57,9 @@ CREATE TABLE PremiumFamily(
 )
 
 CREATE TABLE DisconnectionRequest(
-    submissionDate varchar(100),
-    finalDecision varchar(100),
-    disconnectionReason varchar(100),
+    submissionDate DATE,
+    finalDecision VARCHAR(100),
+    disconnectionReason VARCHAR(100),
     managerID INTEGER,
     familyID INTEGER,
     FOREIGN KEY (managerID) REFERENCES Manager(managerID) ON DELETE CASCADE,
@@ -72,7 +72,7 @@ CREATE TABLE TransferRequest(
     transferReason VARCHAR(100),
     fromManagerID INTEGER,
     familyID INTEGER,
-    submissionDate VARCHAR(100),
+    submissionDate DATE,
     toManagerID INTEGER,
     CHECK (fromManagerID != toManagerID),
     FOREIGN KEY (fromManagerID, familyID, submissionDate) REFERENCES disconnectionRequest(managerID, familyID, submissionDate) ON DELETE CASCADE,
@@ -80,15 +80,16 @@ CREATE TABLE TransferRequest(
     PRIMARY KEY (toManagerID, familyID, submissionDate)
 )
 
+---- change
 CREATE TABLE DigitalConverter(
-    serialNumber INTEGER,
+    serialNumber INTEGER CHECK ( serialNumber >= 0 ),
     familyID INTEGER,
     FOREIGN KEY (familyID) REFERENCES Family(familyID) ON DELETE CASCADE,
     PRIMARY KEY (serialNumber,familyID)
 )
 
 CREATE TABLE FixedBy(
-    cost FLOAT,
+    cost FLOAT CHECK ( cost >= 0 ),
     technicalExpertID INTEGER,
     serialNumber INTEGER PRIMARY KEY,
     familyID INTEGER
@@ -96,11 +97,13 @@ CREATE TABLE FixedBy(
     FOREIGN KEY (serialNumber, familyID) REFERENCES DigitalConverter(serialNumber,familyID) ON DELETE CASCADE,
 )
 
+---- change
 CREATE TABLE Channel(
-    channelNumber INTEGER PRIMARY KEY,
+    channelNumber INTEGER PRIMARY KEY CHECK ( channelNumber >= 0 ),
     channelName VARCHAR(100)
 )
 
+---- change
 CREATE TABLE DCcontainsChannel(
     channelNumber INTEGER,
     serialNumber INTEGER,
@@ -112,20 +115,18 @@ CREATE TABLE DCcontainsChannel(
 CREATE TABLE SwitchingChannel(
     channelNumberFrom INTEGER,
     channelNumberTo INTEGER,
-    serialNumberFrom INTEGER,
-    serialNumberTo INTEGER,
+    serialNumber INTEGER PRIMARY KEY,
     switchingDate VARCHAR(100),
     CHECK (channelNumberFrom != channelNumberTo),
-    CHECK (serialNumberFrom = serialNumberTo),
-    FOREIGN KEY (channelNumberFrom, serialNumberFrom) REFERENCES DCcontainsChannel(channelNumber, serialNumber) ON DELETE CASCADE,
-    FOREIGN KEY (channelNumberTo, serialNumberTo) REFERENCES DCcontainsChannel(channelNumber, serialNumber),
-    PRIMARY KEY (channelNumberFrom, channelNumberTo, switchingDate),
+    FOREIGN KEY (channelNumberFrom, serialNumber) REFERENCES DCcontainsChannel(channelNumber, serialNumber) ON DELETE CASCADE,
+    FOREIGN KEY (channelNumberTo) REFERENCES Channel(channelNumber),
+
 )
 
 CREATE TABLE TvShow(
     tvShowName VARCHAR(100) PRIMARY KEY,
     tvShowGenre VARCHAR(100),
-    tvShowDuration INTEGER
+    tvShowDuration INTEGER CHECK ( tvShowDuration >= 0 )
 )
 
 CREATE TABLE ChannelBroadcastTvShow(
