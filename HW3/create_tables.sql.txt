@@ -1,0 +1,19 @@
+CREATE TABLE Movies
+(
+    movieTitle  VARCHAR(50),
+    releaseDate Date,
+    genre       VARCHAR(20),
+    rating      VARCHAR(20),
+    gross       INTEGER,
+    PRIMARY KEY (movieTitle)
+);
+
+
+CREATE TABLE ActorsInMovies
+(
+    movie     VARCHAR(50),
+    actor     VARCHAR(50),
+    actorRole VARCHAR(50),
+    PRIMARY KEY (movie, actor, actorRole),
+    FOREIGN KEY (movie) REFERENCES Movies (movieTitle)
+);
