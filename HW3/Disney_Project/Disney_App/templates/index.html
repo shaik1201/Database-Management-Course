@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Disney App</title>
+</head>
+    <body style="background-color: pink">
+        <div style="text-align: center">
+            <h1> Disney Movies & Actors Tracker</h1>
+                <div style="text-align: left">
+                    <a href="{% url 'index' %}">Home</a>
+                    <br>
+                    <a href="{% url 'Query_results' %}">Query Results</a>
+                    <br>
+                    <a href="{% url 'add_movie' %}">Add a Movie</a>
+                    <br>
+                </div>
+
+                {% load static %}
+                <img src="{% static 'Disney-characters.png' %}"
+                     alt="Disney Characters" style="width:700px;height:300px;"/>
+
+                <p> Welcome to our Disney website! <br>
+                    Here you can view all the disney movies that have ever been produced and the actors that play in them.
+                </p>
+            </div>
+    </body>
+</html>

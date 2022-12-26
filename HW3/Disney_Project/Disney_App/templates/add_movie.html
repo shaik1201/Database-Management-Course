@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hi</title>
+</head>
+<body style="background-color: pink">
+        <a href="{% url 'index' %}">Home</a>
+        <br>
+        <a href="{% url 'Query_results' %}">Query Results</a>
+        <br>
+        <a href="{% url 'add_movie' %}">Add a Movie</a>
+        <br>
+
+        <form method="post" style="text-align: center">
+            {% csrf_token %}
+            Movie Title: <input type="text" name="movie_title" maxlength="50" required> <br>
+            Release Date: <input type="date" name="release_date" required><br>
+            Genre: <select name="genre" size="1" required>
+                        <option>Action</option>
+                        <option>Adventure</option>
+                        <option>Comedy</option>
+                        <option>Drama</option>
+                    </select><br>
+            Rating: <select name="rating" size="1" required>
+                        <option>R</option>
+                        <option>G</option>
+                        <option>PG</option>
+                        <option>PG-13</option>
+                        <option>Not Rated</option>
+                    </select><br>
+            Gross: <input type="number" name="gross" max="1000000000" min="0" required> <br>
+            <input type="submit">
+        </form>
+</body>
+</html>

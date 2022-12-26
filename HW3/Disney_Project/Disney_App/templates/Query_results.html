@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body style="background-color: pink">
+<h1> Disney Movies & Actors Tracker</h1>
+                <a href="{% url 'index' %}">Home</a>
+                <br>
+                <a href="{% url 'Query_results' %}">Query Results</a>
+                <br>
+                <a href="{% url 'add_movie' %}">Add a Movie</a>
+                <br>
+<p>Genre statistics:</p>
+<table border="1" style="width: 100%">
+
+        <th>Genre</th>
+        <th>Movie with max gross</th>
+        <th>Max gross</th>
+        <th>Greatest length movie</th>
+        <th>Relevant years</th>
+
+    {% for content in sql_res1 %}
+        <tr>
+            <td>{{ content.genre }}</td>
+            <td>{{ content.movieTitle }}</td>
+            <td>{{ content.Max_Gross_movie }}</td>
+            <td>{{ content.greatest_length_movie }}</td>
+            {% if not content.relevant_years %}
+            <td>{{ 0 }}</td>
+            {% else %}
+            <td>{{ content.relevant_years }}</td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+
+</table>
+
+<p>Actors that played in more than number_of_movies movies:</p>
+<form method="post">
+    {% csrf_token %}
+    Number of movies:<input type="number" name="n_movies"> <br>
+    <input type="submit" min="0">
+</form>
+
+<table border="1" style="width: 100%">
+    <th>Actor</th>
+    <th>Movie</th>
+
+    {% for content in sql_res4 %}
+    <tr>
+        <td>{{ content.movie4 }}</td>
+        <td>{{ content.actor4 }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+<p>Movies with most "Children Only" actors:</p>
+<table border="1" style="width: 100%">
+    <th>Movie</th>
+    <th>Number of children only actors</th>
+    {% for content in sql_res5 %}
+    <tr>
+        <td>{{ content.movie5 }}</td>
+        <td>{{ content.Number_Of_Children_Only_Actors }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+</body>
+</html>

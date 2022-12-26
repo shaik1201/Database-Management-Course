@@ -49,3 +49,4 @@ CREATE TABLE Job(
             REFERENCES Recruiter(recruiterID),
     UNIQUE (jobNumber, recruiterID),
 );
+
