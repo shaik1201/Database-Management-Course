@@ -37,9 +37,18 @@
 <!--</p>-->
 
 <p>
-    {% for content in titleOrder %}
-        {{ content.title }}
-    {% endfor %}
+<!--    {% for content in childrenNumAndGenre %}-->
+<!--        {{ content.ChildrenNum }}-->
+<!--        {{ content.genre }}-->
+<!--    {% endfor %}-->
+    {% if error %}
+    {{error}}
+
+    {% else %}
+    {{x}}
+
+
+    {% endif %}
 </p>
 
 

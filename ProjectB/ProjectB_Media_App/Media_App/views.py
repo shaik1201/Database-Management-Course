@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.db import connection
 
+from . import models
+
 flag1 = False
 flag2 = False
 flag3 = False
@@ -197,86 +199,116 @@ def Query_results(request):
 
 
 def Records_management(request):
-    # hID_order = 999999999
-    # title_order = 'aaaaaaaaa'
 
+    if not request.POST:
+        return render(request, 'Records_management.html', {"x": ''})
 
+    else:
+        with connection.cursor() as cursor:
+            if request.POST and request.POST.get('hID_order') \
+                    and request.POST.get('title_order'):
+                title_order = request.POST.get('title_order')
+                hID_order = request.POST.get('hID_order')
 
-    # check if family exists
-    with connection.cursor() as cursor:
-        if request.POST and request.POST.get('hID_order') \
-                and request.POST.get('title_order'):
-            title_order = request.POST.get('title_order')
-            hID_order = request.POST.get('hID_order')
+                # check if family exists
+                cursor.execute(
+                    f"""
+                        SELECT H.hID
+                        FROM Households H
+                        WHERE H.hID = {hID_order}
+                    """
+                )
+                hIDOrder = dictfetchall(cursor)
 
-            cursor.execute(
-                f"""
-                    SELECT H.hID
-                    FROM Households H
-                    WHERE H.hID = {hID_order}
-                """
-            )
-            hIDOrder = dictfetchall(cursor)
+            # check if title exists
+                cursor.execute(
+                    f"""
+                        SELECT P.title
+                        FROM Programs P
+                        WHERE P.title = '{title_order}'
+                            """
+                )
+                titleOrder = dictfetchall(cursor)
 
-        # check if title exists
-            cursor.execute(
-                f"""
-                    SELECT P.title
-                    FROM Programs P
-                    WHERE P.title = '{title_order}'
+                # check orders number of a family
+                cursor.execute(
+                    f"""
+                        SELECT COUNT(RO1.title) AS OrdersNumber
+                        FROM RecordOrders AS RO1
+                        WHERE RO1.hID = {hID_order}
+                        GROUP BY RO1.hID
+                    """
+                )
+                ordersNumber = dictfetchall(cursor)
+
+                # check if a family order a movie and if yes return his hID
+                cursor.execute(
+                    f"""
+                        SELECT RO1.hID
+                        FROM RecordOrders AS RO1
+                        WHERE RO1.title = '{title_order}'
                         """
-            )
-            titleOrder = dictfetchall(cursor)
+                )
+                hIDOwnsRecord = dictfetchall(cursor)
 
-            # # check orders number of a family
-            # cursor.execute(
-            #     f"""
-            #         SELECT COUNT(RO1.title) AS OrdersNumber
-            #         FROM RecordOrders AS RO1
-            #         WHERE RO1.hID = {hID_order}
-            #         GROUP BY RO1.hID
-            #     """
-            # )
-            # ordersNumber = dictfetchall(cursor)
-            #
-            # # check if a family order a movie and if yes return his hID
-            # cursor.execute(
-            #     f"""
-            #         SELECT RO1.hID
-            #         FROM RecordOrders AS RO1
-            #         WHERE RO1.title = {title_order}
-            #         """
-            # )
-            # hIDOwnsRecord = dictfetchall(cursor)
-            #
-            #
-            # # check if family already ordered the title
-            # cursor.execute(
-            #     f"""
-            #             SELECT RR1.hID
-            #             FROM RecordReturns AS RR1
-            #             WHERE RR1.title = {title_order} and RR1.hID = {hID_order}
-            #             """
-            # )
-            # hIDReturnsRecord = dictfetchall(cursor)
-            #
-            # # check if there is children in the family and genre of title
-            # cursor.execute(
-            #     f"""
-            #     SELECT H1.ChildrenNum, P1.genre
-            #     FROM Households AS H1, Programs AS P1
-            #     WHERE H1.hID = {hID_order} AND P1.title = {title_order}
-            #     """
-            # )
-            # childrenNumAndGenre = dictfetchall(cursor)
-            # # childrenNum = childrenNumAndGenre[0]['ChildrenNum']
-            # # titleGenre = childrenNumAndGenre[0]['genre']
+                # check if family already ordered the title
+                cursor.execute(
+                    f"""
+                            SELECT RR1.hID
+                            FROM RecordReturns AS RR1
+                            WHERE RR1.title = '{title_order}' and RR1.hID = {hID_order}
+                            """
+                )
+                hIDReturnsRecord = dictfetchall(cursor)
+
+                # check if there is children in the family and genre of title
+                cursor.execute(
+                    f"""
+                    SELECT H1.ChildrenNum, P1.genre
+                    FROM Households AS H1, Programs AS P1
+                    WHERE H1.hID = {hID_order} AND P1.title = '{title_order}'
+                    """
+                )
+                childrenNumAndGenre = dictfetchall(cursor)
+                if childrenNumAndGenre:
+                    childrenNum = childrenNumAndGenre[0]['ChildrenNum']
+                    titleGenre = childrenNumAndGenre[0]['genre']
 
 
-            return render(request, 'Records_management.html', {'titleOrder': titleOrder})
-    return render(request, 'Records_management.html', {"x":'a'})
+                if not hIDOrder:
+                    return render(request, 'Records_management.html', {'error': 'Family hID was not found'})
+
+                if not titleOrder:
+                    return render(request, 'Records_management.html', {'error': 'Movie title was not found'})
+
+                if ordersNumber and ordersNumber[0]['OrdersNumber'] >= 3:
+                    return render(request, 'Records_management.html', {'error': 'Family already has 3 records'})
+
+                if hIDOwnsRecord:
+                    if str(hIDOwnsRecord[0]['hID']) == hID_order:
+                        return render(request, 'Records_management.html', {'error': "Family already owns this record's title"})
+                    else:
+                        return render(request, 'Records_management.html', {'error': "Another family already owns this record's title"})
+
+                if hIDReturnsRecord:
+                    return render(request, 'Records_management.html', {'error': "Family already ordered this record's title before"})
+
+                if childrenNumAndGenre and childrenNum > 0 and (titleGenre == 'Reality' or titleGenre == 'Adults only'):
+                    return render(request, 'Records_management.html', {'error': "Family has kids therefore the genre is inappropriate"})
+
+                add_to_RecordOrders(title_order, hID_order)
 
 
+
+
+                # return render(request, 'Records_management.html', {'childrenNum': childrenNum})
+
+
+def add_to_RecordOrders(title, hid):
+
+    new_content = models.Recordorders(title=title,
+                                      hid=hid)
+    new_content.save()
 
 
 
