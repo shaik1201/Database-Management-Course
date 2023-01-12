@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Query results</title>
 </head>
 <body style="background-color: pink">
 <h1> Disney Movies & Actors Tracker</h1>
@@ -27,17 +27,13 @@
             <td>{{ content.movieTitle }}</td>
             <td>{{ content.Max_Gross_movie }}</td>
             <td>{{ content.greatest_length_movie }}</td>
-            {% if not content.relevant_years %}
-            <td>{{ 0 }}</td>
-            {% else %}
             <td>{{ content.relevant_years }}</td>
-            {% endif %}
         </tr>
     {% endfor %}
 
 </table>
 
-<p>Actors that played in more than number_of_movies movies:</p>
+<p>Actors that played in more than 'Number of movies' movies:</p>
 <form method="post">
     {% csrf_token %}
     Number of movies:<input type="number" name="n_movies"> <br>
@@ -45,8 +41,9 @@
 </form>
 
 <table border="1" style="width: 100%">
-    <th>Actor</th>
     <th>Movie</th>
+    <th>Actor</th>
+
 
     {% for content in sql_res4 %}
     <tr>

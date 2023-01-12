@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+    <body style="background-color: bisque">
+        <a href="{% url 'index' %}">Home</a>
+        <br>
+        <a href="{% url 'Query_results' %}">Query Results</a>
+        <br>
+        <a href="{% url 'Records_management' %}">Records Management</a>
+        <br>
+        <a href="{% url 'Rankings' %}">Rankings</a>
+        <br>
+
+        <h1 style="text-align: center">
+            Welcome to Al-Netek!
+        </h1>
+
+        <div style="text-align: center">
+    {% load static %}
+    <img  src="{% static 'tv.webp' %}"
+         alt="Old Vintage TV" style="width:400px;height:400px;"/>
+        </div>
+    </body>
+</html>
