@@ -29,24 +29,12 @@
     title:<input type="text" name="title_order" required> <br>
     <input type="submit">
 </form>
-
-<!--<p>-->
-<!--    {% for content in hIDOrder %}-->
-<!--        {{ content.hID }}-->
-<!--    {% endfor %}-->
-<!--</p>-->
-
 <p>
-<!--    {% for content in childrenNumAndGenre %}-->
-<!--        {{ content.ChildrenNum }}-->
-<!--        {{ content.genre }}-->
-<!--    {% endfor %}-->
     {% if error %}
     {{error}}
 
     {% else %}
-    {{x}}
-
+    {{success}}
 
     {% endif %}
 </p>
@@ -64,11 +52,28 @@
     <input type="submit">
 </form>
 
+<p>
+    {% if error_return %}
+    {{error_return}}
+
+    {% else %}
+    {{success_return}}
+
+    {% endif %}
+</p>
+
 <br>
 <table border="1" style="width: 70%">
 
         <th>hID</th>
         <th>total orders</th>
+
+        {% for content in table %}
+            <tr>
+                <td>{{ content.hID }}</td>
+                <td>{{ content.count }}</td>
+            </tr>
+        {% endfor %}
 
 </table>
 

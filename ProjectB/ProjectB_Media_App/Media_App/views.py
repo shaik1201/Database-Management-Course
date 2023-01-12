@@ -65,6 +65,7 @@ def Query_results(request):
                     )
                 """
             )
+            flag1 = True
 
         cursor.execute(
             """
@@ -76,7 +77,7 @@ def Query_results(request):
         )
 
         sql_res1 = dictfetchall(cursor)
-        flag1 = True
+
 
         # Query 2
 
@@ -108,6 +109,7 @@ def Query_results(request):
                 GROUP BY KR1.title
                 """
             )
+            flag2 = True
 
         cursor.execute(
             """
@@ -119,7 +121,6 @@ def Query_results(request):
             """
         )
         sql_res2 = dictfetchall(cursor)
-        flag2 = True
 
         # Query 3
 
@@ -182,6 +183,7 @@ def Query_results(request):
                 WHERE PR1.title = LTS1.title and PR1.rank < 2
                 """
             )
+            flag3 = True
 
         cursor.execute(
             """
@@ -193,7 +195,6 @@ def Query_results(request):
         )
 
         sql_res3 = dictfetchall(cursor)
-        flag3 = True
 
         return render(request, 'Query_results.html', {'sql_res1': sql_res1, 'sql_res2': sql_res2, 'sql_res3': sql_res3})
 
@@ -201,7 +202,22 @@ def Query_results(request):
 def Records_management(request):
 
     if not request.POST:
-        return render(request, 'Records_management.html', {"x": ''})
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                    SELECT Top 3 hID, COUNT(title) AS count
+                    FROM
+                    (
+                        SELECT hID, title FROM RecordOrders
+                        UNION
+                        SELECT hID, title FROM RecordReturns
+                    ) AS combined
+                    GROUP BY hID
+                    ORDER BY count DESC
+                """
+            )
+            table = dictfetchall(cursor)
+        return render(request, 'Records_management.html', {"table": table})
 
     else:
         with connection.cursor() as cursor:
@@ -296,19 +312,107 @@ def Records_management(request):
                 if childrenNumAndGenre and childrenNum > 0 and (titleGenre == 'Reality' or titleGenre == 'Adults only'):
                     return render(request, 'Records_management.html', {'error': "Family has kids therefore the genre is inappropriate"})
 
-                add_to_RecordOrders(title_order, hID_order)
+                # add the record to RecordOrders
+                cursor.execute(
+                    f"""
+                        INSERT INTO RecordOrders (hID, title) VALUES ({hID_order}, '{title_order}');
+                    """
+                )
+
+                cursor.execute(
+                    f"""
+                         SELECT Top 3 hID, COUNT(title) AS count
+                         FROM
+                         (
+                             SELECT hID, title FROM RecordOrders
+                             UNION
+                             SELECT hID, title FROM RecordReturns
+                         ) AS combined
+                         GROUP BY hID
+                         ORDER BY count DESC
+                     """
+                )
+                table = dictfetchall(cursor)
+
+                return render(request, 'Records_management.html', {'success': 'Order successfully added!', 'table': table})
+
+            if request.POST and request.POST.get('hID_return') \
+                    and request.POST.get('title_return'):
+                title_return = request.POST.get('title_return')
+                hID_return = request.POST.get('hID_return')
+
+                # check if family exists
+                cursor.execute(
+                    f"""
+                                        SELECT H.hID
+                                        FROM Households H
+                                        WHERE H.hID = {hID_return}
+                                    """
+                )
+                hIDReturn = dictfetchall(cursor)
+
+                # check if title exists
+                cursor.execute(
+                    f"""
+                                        SELECT P.title
+                                        FROM Programs P
+                                        WHERE P.title = '{title_return}'
+                                            """
+                )
+                titleReturn = dictfetchall(cursor)
+
+                # check if a family order a movie and if yes return his hID
+                cursor.execute(
+                    f"""
+                                        SELECT RO1.hID
+                                        FROM RecordOrders AS RO1
+                                        WHERE RO1.title = '{title_return}'
+                                        """
+                )
+                hIDOwnsRecordReturn = dictfetchall(cursor)
+
+                if not hIDReturn:
+                    return render(request, 'Records_management.html', {'error_return': 'Family hID was not found'})
+
+                if not titleReturn:
+                    return render(request, 'Records_management.html', {'error_return': 'Movie title was not found'})
+
+                if hIDOwnsRecordReturn != hIDReturn:
+                    return render(request, 'Records_management.html', {'error_return': 'You can not return a movie another family owns!'})
+
+                # delete the record from RecordOrders
+                cursor.execute(
+                    f"""
+                    DELETE FROM RecordOrders WHERE hID = {hID_return} and title = '{title_return}';
+                    """
+                )
+
+                # add the record to RecordReturns
+                cursor.execute(
+                    f"""
+                        INSERT INTO RecordReturns (hID, title) VALUES ({hID_return}, '{title_return}');
+                    """
+                )
+
+                cursor.execute(
+                    f"""
+                                 SELECT Top 3 hID, COUNT(title) AS count
+                                 FROM
+                                 (
+                                     SELECT hID, title FROM RecordOrders
+                                     UNION
+                                     SELECT hID, title FROM RecordReturns
+                                 ) AS combined
+                                 GROUP BY hID
+                                 ORDER BY count DESC
+                             """
+                )
+                table = dictfetchall(cursor)
+
+                return render(request, 'Records_management.html', {'success_return': 'Order successfully returned!', 'table': table})
 
 
 
-
-                # return render(request, 'Records_management.html', {'childrenNum': childrenNum})
-
-
-def add_to_RecordOrders(title, hid):
-
-    new_content = models.Recordorders(title=title,
-                                      hid=hid)
-    new_content.save()
 
 
 
