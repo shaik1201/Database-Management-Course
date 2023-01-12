@@ -25,14 +25,24 @@
 
 <form method="post">
     {% csrf_token %}
-    hID:<input type="number" name="hID_order"> <br>
-    title:<input type="text" name="title_order"> <br>
+    hID:<input type="number" name="hID_order" required> <br>
+    title:<input type="text" name="title_order" required> <br>
     <input type="submit">
 </form>
 
+<!--<p>-->
+<!--    {% for content in hIDOrder %}-->
+<!--        {{ content.hID }}-->
+<!--    {% endfor %}-->
+<!--</p>-->
+
 <p>
-    {{childrenNumAndGenre}}
+    {% for content in titleOrder %}
+        {{ content.title }}
+    {% endfor %}
 </p>
+
+
 
 <h2>
     Return

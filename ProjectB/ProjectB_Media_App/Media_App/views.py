@@ -219,64 +219,62 @@ def Records_management(request):
             hIDOrder = dictfetchall(cursor)
 
         # check if title exists
-        # if request.POST and request.POST.get('title_order'):
-        #     title_order = request.POST.get('title_order')
             cursor.execute(
                 f"""
                     SELECT P.title
                     FROM Programs P
-                    WHERE P.title = 'Arrow'
+                    WHERE P.title = '{title_order}'
                         """
             )
             titleOrder = dictfetchall(cursor)
 
-            # check orders number of a family
-            cursor.execute(
-                f"""
-                    SELECT COUNT(RO1.title) AS OrdersNumber
-                    FROM RecordOrders AS RO1
-                    WHERE RO1.hID = {hID_order}
-                    GROUP BY RO1.hID
-                """
-            )
-            ordersNumber = dictfetchall(cursor)
+            # # check orders number of a family
+            # cursor.execute(
+            #     f"""
+            #         SELECT COUNT(RO1.title) AS OrdersNumber
+            #         FROM RecordOrders AS RO1
+            #         WHERE RO1.hID = {hID_order}
+            #         GROUP BY RO1.hID
+            #     """
+            # )
+            # ordersNumber = dictfetchall(cursor)
+            #
+            # # check if a family order a movie and if yes return his hID
+            # cursor.execute(
+            #     f"""
+            #         SELECT RO1.hID
+            #         FROM RecordOrders AS RO1
+            #         WHERE RO1.title = {title_order}
+            #         """
+            # )
+            # hIDOwnsRecord = dictfetchall(cursor)
+            #
+            #
+            # # check if family already ordered the title
+            # cursor.execute(
+            #     f"""
+            #             SELECT RR1.hID
+            #             FROM RecordReturns AS RR1
+            #             WHERE RR1.title = {title_order} and RR1.hID = {hID_order}
+            #             """
+            # )
+            # hIDReturnsRecord = dictfetchall(cursor)
+            #
+            # # check if there is children in the family and genre of title
+            # cursor.execute(
+            #     f"""
+            #     SELECT H1.ChildrenNum, P1.genre
+            #     FROM Households AS H1, Programs AS P1
+            #     WHERE H1.hID = {hID_order} AND P1.title = {title_order}
+            #     """
+            # )
+            # childrenNumAndGenre = dictfetchall(cursor)
+            # # childrenNum = childrenNumAndGenre[0]['ChildrenNum']
+            # # titleGenre = childrenNumAndGenre[0]['genre']
 
-            # check if a family order a movie and if yes return his hID
-            cursor.execute(
-                f"""
-                    SELECT RO1.hID
-                    FROM RecordOrders AS RO1
-                    WHERE RO1.title = {title_order}
-                    """
-            )
-            hIDOwnsRecord = dictfetchall(cursor)
 
-
-            # check if family already ordered the title
-            cursor.execute(
-                f"""
-                        SELECT RR1.hID
-                        FROM RecordReturns AS RR1
-                        WHERE RR1.title = {title_order} and RR1.hID = {hID_order}
-                        """
-            )
-            hIDReturnsRecord = dictfetchall(cursor)
-
-            # check if there is children in the family and genre of title
-            cursor.execute(
-                f"""
-                SELECT H1.ChildrenNum, P1.genre
-                FROM Households AS H1, Programs AS P1
-                WHERE H1.hID = {hID_order} AND P1.title = {title_order}
-                """
-            )
-            childrenNumAndGenre = dictfetchall(cursor)
-            # childrenNum = childrenNumAndGenre[0]['ChildrenNum']
-            # titleGenre = childrenNumAndGenre[0]['genre']
-
-
-            return render(request, 'Records_management', {'childrenNumAndGenre': childrenNumAndGenre})
-    return render(request, 'Records_management.html', {"x":''})
+            return render(request, 'Records_management.html', {'titleOrder': titleOrder})
+    return render(request, 'Records_management.html', {"x":'a'})
 
 
 
