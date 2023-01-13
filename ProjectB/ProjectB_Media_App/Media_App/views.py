@@ -228,6 +228,22 @@ def Records_management(request):
                 title_order = request.POST.get('title_order')
                 hID_order = request.POST.get('hID_order')
 
+                # top 3 for the table
+                cursor.execute(
+                    f"""
+                                    SELECT Top 3 hID, COUNT(title) AS count
+                                    FROM
+                                    (
+                                        SELECT hID, title FROM RecordOrders
+                                        UNION
+                                        SELECT hID, title FROM RecordReturns
+                                    ) AS combined
+                                    GROUP BY hID
+                                    ORDER BY count DESC
+                                """
+                )
+                table = dictfetchall(cursor)
+
                 # check if family exists
                 cursor.execute(
                     f"""
@@ -294,25 +310,25 @@ def Records_management(request):
 
 
                 if not hIDOrder:
-                    return render(request, 'Records_management.html', {'error': 'Family hID was not found'})
+                    return render(request, 'Records_management.html', {'error': 'Family hID was not found', 'table': table})
 
                 if not titleOrder:
-                    return render(request, 'Records_management.html', {'error': 'Movie title was not found'})
+                    return render(request, 'Records_management.html', {'error': 'Movie title was not found', 'table': table})
 
                 if ordersNumber and ordersNumber[0]['OrdersNumber'] >= 3:
-                    return render(request, 'Records_management.html', {'error': 'Family already has 3 records'})
+                    return render(request, 'Records_management.html', {'error': 'Family already has 3 records', 'table': table})
 
                 if hIDOwnsRecord:
                     if str(hIDOwnsRecord[0]['hID']) == hID_order:
-                        return render(request, 'Records_management.html', {'error': "Family already owns this record's title"})
+                        return render(request, 'Records_management.html', {'error': "Family already owns this record's title", 'table': table})
                     else:
-                        return render(request, 'Records_management.html', {'error': "Another family already owns this record's title"})
+                        return render(request, 'Records_management.html', {'error': "Another family already owns this record's title", 'table': table})
 
                 if hIDReturnsRecord:
-                    return render(request, 'Records_management.html', {'error': "Family already ordered this record's title before"})
+                    return render(request, 'Records_management.html', {'error': "Family already ordered this record's title before", 'table': table})
 
                 if childrenNumAndGenre and childrenNum > 0 and (titleGenre == 'Reality' or titleGenre == 'Adults only'):
-                    return render(request, 'Records_management.html', {'error': "Family has kids therefore the genre is inappropriate"})
+                    return render(request, 'Records_management.html', {'error': "Family has kids therefore the genre is inappropriate", 'table': table})
 
                 # add the record to RecordOrders
                 cursor.execute(
@@ -342,6 +358,22 @@ def Records_management(request):
                     and request.POST.get('title_return'):
                 title_return = request.POST.get('title_return')
                 hID_return = request.POST.get('hID_return')
+
+                # top 3 table
+                cursor.execute(
+                    f"""
+                                                 SELECT Top 3 hID, COUNT(title) AS count
+                                                 FROM
+                                                 (
+                                                     SELECT hID, title FROM RecordOrders
+                                                     UNION
+                                                     SELECT hID, title FROM RecordReturns
+                                                 ) AS combined
+                                                 GROUP BY hID
+                                                 ORDER BY count DESC
+                                             """
+                )
+                table = dictfetchall(cursor)
 
                 # check if family exists
                 cursor.execute(
@@ -374,13 +406,13 @@ def Records_management(request):
                 hIDOwnsRecordReturn = dictfetchall(cursor)
 
                 if not hIDReturn:
-                    return render(request, 'Records_management.html', {'error_return': 'Family hID was not found'})
+                    return render(request, 'Records_management.html', {'error_return': 'Family hID was not found', 'table': table})
 
                 if not titleReturn:
-                    return render(request, 'Records_management.html', {'error_return': 'Movie title was not found'})
+                    return render(request, 'Records_management.html', {'error_return': 'Movie title was not found', 'table': table})
 
                 if hIDOwnsRecordReturn != hIDReturn:
-                    return render(request, 'Records_management.html', {'error_return': 'You can not return a movie another family owns!'})
+                    return render(request, 'Records_management.html', {'error_return': 'You can not return a movie another family owns!', 'table': table})
 
                 # delete the record from RecordOrders
                 cursor.execute(
@@ -425,8 +457,9 @@ def Rankings(request):
                 HAVING COUNT(P1.title) >= 5
                 """
             )
-            genres = dictfetchall(cursor)
-            return render(request, 'Rankings.html', {'genres': genres})
+            genre = dictfetchall(cursor)
+            flag = True
+            return render(request, 'Rankings.html', {'genre': genre, 'flag': flag})
 
     else:
         with connection.cursor() as cursor:
@@ -460,21 +493,56 @@ def Rankings(request):
                         WHERE hID = {hID_selected} AND title = '{title_selected}';
                         """
                     )
+                    flag = True
 
-                return render(request, 'Rankings.html')
+                return render(request, 'Rankings.html', {'flag': flag})
 
-            if request.POST and request.POST.get('min_rank'):
+
+            if request.POST and request.POST.get('genre_selected') and request.POST.get('min_rank'):
+                genre_selected = request.POST.get('genre_selected')
                 min_rank = request.POST.get('min_rank')
+
                 cursor.execute(
                     f"""
-                    SELECT TOP 5 PR1.title, COUNT(PR1.rank) as count
-                    FROM ProgramRanks AS PR1
+                    create view SpokenShows1
+                    as
+                    SELECT top 5 PR1.title, CAST(AVG(Cast(PR1.rank AS DECIMAL(10,2))) AS DECIMAL(10,2)) AS AverageRank
+                    FROM ProgramRanks AS PR1, Programs P
+                    WHERE PR1.title = P.title AND P.genre = '{genre_selected}'
                     GROUP BY PR1.title
                     HAVING COUNT(*) >= {min_rank}
-                    ORDER BY count DESC, title
+                    ORDER BY AverageRank DESC, title"""
+                    )
+
+                cursor.execute(
+                    f"""SELECT TOP 5 P2.title, ISNULL(SS.AverageRank, 0) AS Average
+                    FROM Programs AS P2 left outer join SpokenShows1 SS on P2.title = SS.title
+                    WHERE P2.genre = '{genre_selected}'
+                    GROUP BY P2.title, SS.AverageRank
+                    ORDER BY Average DESC, title
                     """
                 )
-                minimum_rank = dictfetchall(cursor)
-                return render(request, 'Rankings.html', {'minimum_rank': minimum_rank})
+                spoken_shows = dictfetchall(cursor)
+
+                cursor.execute(
+                    f"""
+                     DROP VIEW SpokenShows1
+                    """
+                )
+
+                cursor.execute(
+                    f"""
+                                            SELECT genre
+                                            FROM Programs AS P1
+                                            GROUP BY genre
+                                            HAVING COUNT(P1.title) >= 5
+                                            """
+                )
+                genre = dictfetchall(cursor)
+
+                flag = False
+                return render(request, 'Rankings.html', {'spoken_shows': spoken_shows, 'genre': genre, 'flag': flag})
+
+
 
 

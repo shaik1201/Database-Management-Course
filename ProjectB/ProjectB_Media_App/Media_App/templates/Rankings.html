@@ -36,27 +36,30 @@
 
 <form method="post">
     {% csrf_token %}
-    genres:<select name="genres_selected" size="1">
-                {% for content in genres %}
+    genre:<select name="genre_selected" size="1">
+                {% for content in genre %}
                         <option> {{ content.genre }} </option>
                 {% endfor %}
             </select> <br>
-    min_rank = <input type="number" name="min_rank" required> <br>
+    min_rank: <input type="number" name="min_rank" required> <br>
     <input type="submit">
 </form>
 
 
-<table border="1" style="width: 70%">
+{% if not flag %}
+    <table border="1" style="width: 70%">
 
-        <th>Spoken Title</th>
-        {% for content in minimum_rank %}
-            <tr>
-                <td>{{ minimum_rank }}</td>
-            </tr>
-        {% endfor %}
+            <th>title</th>
+            <th>average rank</th>
 
-</table>
-
+            {% for content in spoken_shows %}
+                <tr>
+                    <td>{{ content.title}}</td>
+                    <td>{{ content.Average }}</td>
+                </tr>
+            {% endfor %}
+    </table>
+{% endif %}
 
 
 
