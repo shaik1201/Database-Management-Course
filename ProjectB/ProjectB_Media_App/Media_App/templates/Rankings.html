@@ -14,15 +14,32 @@
         <br>
         <a href="{% url 'Rankings' %}">Rankings</a>
         <br>
-<h1>
+<h1 style="text-align: center">
     Rankings
 </h1>
+<br>
 
+<h2> Rank A Title</h2>
 <form method="post">
     {% csrf_token %}
-    hID:<input type="number" name="hID_selected" required> <br>
-    title:<input type="text" name="title_selected" required> <br>
-    ranking:<select name="rank_selected" size="1">
+    hID:<select name="hID_selected" size="1" required>
+                <option selected disabled hidden> </option>
+                {% for content in allhID %}
+                        <option> {{ content.hID }} </option>
+                {% endfor %}
+        </select>
+    <br>
+
+    title:<select name="title_selected" size="1" required>
+                    <option selected disabled hidden> </option>
+                    {% for content in allTitle %}
+                            <option> {{ content.title }} </option>
+                    {% endfor %}
+            </select>
+    <br>
+
+    ranking:<select name="rank_selected" size="1" required>
+    <option selected disabled hidden> </option>
                 <option> 1 </option>
                 <option> 2 </option>
                 <option> 3 </option>
@@ -33,10 +50,13 @@
 </form>
 
 <br>
+<br>
 
+<h2> Top 5 Spoken Title of a given Genre </h2>
 <form method="post">
     {% csrf_token %}
-    genre:<select name="genre_selected" size="1">
+    genre:<select name="genre_selected" size="1" required>
+                <option selected disabled hidden> </option>
                 {% for content in genre %}
                         <option> {{ content.genre }} </option>
                 {% endfor %}

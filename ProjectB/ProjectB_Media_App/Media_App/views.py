@@ -459,7 +459,23 @@ def Rankings(request):
             )
             genre = dictfetchall(cursor)
             flag = True
-            return render(request, 'Rankings.html', {'genre': genre, 'flag': flag})
+            cursor.execute(
+                """
+                    SELECT H1.hID
+                    FROM Households AS H1
+                """
+            )
+            allhID = dictfetchall(cursor)
+
+            cursor.execute(
+                """
+                    SELECT P1.title
+                    FROM Programs AS P1
+                """
+            )
+            allTitle = dictfetchall(cursor)
+
+            return render(request, 'Rankings.html', {'genre': genre, 'flag': flag, 'allhID':allhID, 'allTitle': allTitle})
 
     else:
         with connection.cursor() as cursor:
@@ -493,9 +509,33 @@ def Rankings(request):
                         WHERE hID = {hID_selected} AND title = '{title_selected}';
                         """
                     )
-                    flag = True
+                flag = True
+                cursor.execute(
+                    """
+                        SELECT H1.hID
+                        FROM Households AS H1
+                    """
+                )
+                allhID = dictfetchall(cursor)
 
-                return render(request, 'Rankings.html', {'flag': flag})
+                cursor.execute(
+                    """
+                        SELECT P1.title
+                        FROM Programs AS P1
+                    """
+                )
+                allTitle = dictfetchall(cursor)
+
+                cursor.execute(
+                    f"""
+                    SELECT genre
+                    FROM Programs AS P1
+                    GROUP BY genre
+                    HAVING COUNT(P1.title) >= 5
+                    """
+                )
+                genre = dictfetchall(cursor)
+                return render(request, 'Rankings.html', {'flag': flag,'allhID': allhID, 'allTitle': allTitle, 'genre': genre})
 
 
             if request.POST and request.POST.get('genre_selected') and request.POST.get('min_rank'):
@@ -540,8 +580,23 @@ def Rankings(request):
                 )
                 genre = dictfetchall(cursor)
 
+                cursor.execute(
+                    """
+                        SELECT H1.hID
+                        FROM Households AS H1
+                    """
+                )
+                allhID = dictfetchall(cursor)
+
+                cursor.execute(
+                    """
+                        SELECT P1.title
+                        FROM Programs AS P1
+                    """
+                )
+                allTitle = dictfetchall(cursor)
                 flag = False
-                return render(request, 'Rankings.html', {'spoken_shows': spoken_shows, 'genre': genre, 'flag': flag})
+                return render(request, 'Rankings.html', {'spoken_shows': spoken_shows, 'genre': genre, 'flag': flag, 'allhID': allhID, 'allTitle': allTitle})
 
 
 
