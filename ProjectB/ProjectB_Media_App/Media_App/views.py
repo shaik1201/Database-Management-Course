@@ -20,52 +20,46 @@ def index(request):
 def Query_results(request):
     with connection.cursor() as cursor:
         # Query 1
-        global flag1
-        global flag2
-        global flag3
+        cursor.execute(
+            """
+            Create VIEW noChildren
+            AS
+            SELECT RR1.title, COUNT(H1.hID) as NumberProgReturnedPerHID
+            FROM RecordReturns as RR1, Households as H1
+            WHERE RR1.hID = H1.hID and H1.ChildrenNum = 0
+            GROUP BY RR1.title
+            HAVING COUNT(H1.hID) >= 1
+            """
+        )
 
-        if not flag1:
-            cursor.execute(
-                """
-                Create VIEW noChildren
-                AS
-                SELECT RR1.title, COUNT(H1.hID) as NumberProgReturnedPerHID
-                FROM RecordReturns as RR1, Households as H1
-                WHERE RR1.hID = H1.hID and H1.ChildrenNum = 0
-                GROUP BY RR1.title
-                HAVING COUNT(H1.hID) >= 1
-                """
-            )
+        cursor.execute(
+            """
+           CREATE VIEW LongestSHowPerGenre
+            AS
+            SELECT *
+            FROM Programs as P1
+            WHERE P1.duration >= ALL (SELECT P2.duration
+                                     FROM Programs as P2
+                                     WHERE P1.genre = P2.genre
+                                     )
+                                AND P1.genre LIKE 'A%'
+            GROUP BY P1.genre, title, duration
+            """
+        )
 
-            cursor.execute(
-                """
-               CREATE VIEW LongestSHowPerGenre
-                AS
-                SELECT *
-                FROM Programs as P1
-                WHERE P1.duration >= ALL (SELECT P2.duration
-                                         FROM Programs as P2
-                                         WHERE P1.genre = P2.genre
-                                         )
-                                    AND P1.genre LIKE 'A%'
-                GROUP BY P1.genre, title, duration
-                """
-            )
-
-            cursor.execute(
-                """
-               CREATE VIEW LSGNoDuplicate
-                AS
-                SELECT *
-                FROM LongestSHowPerGenre as LSG1
-                WHERE LSG1.title IN (
-                        SELECT top 1 LSG2.title
-                        FROM LongestSHowPerGenre AS LSG2
-                        WHERE LSG1.genre = LSG2.genre
-                    )
-                """
-            )
-            flag1 = True
+        cursor.execute(
+            """
+           CREATE VIEW LSGNoDuplicate
+            AS
+            SELECT *
+            FROM LongestSHowPerGenre as LSG1
+            WHERE LSG1.title IN (
+                    SELECT top 1 LSG2.title
+                    FROM LongestSHowPerGenre AS LSG2
+                    WHERE LSG1.genre = LSG2.genre
+                )
+            """
+        )
 
         cursor.execute(
             """
@@ -78,38 +72,35 @@ def Query_results(request):
 
         sql_res1 = dictfetchall(cursor)
 
-
         # Query 2
 
-        if not flag2:
-            cursor.execute(
-                """
-               CREATE VIEW KosherRank
-                AS
-                SELECT DISTINCT PR1.*
-                FROM RecordOrders AS RO1, ProgramRanks AS PR1
-                WHERE (RO1.title = PR1.title AND RO1.hID = PR1.hID)
-                UNION
-                SELECT DISTINCT PR1.*
-                FROM RecordReturns AS RR1, ProgramRanks AS PR1
-                WHERE (RR1.title = PR1.title AND RR1.hID = PR1.hID)
-                """
-            )
+        cursor.execute(
+            """
+           CREATE VIEW KosherRank
+            AS
+            SELECT DISTINCT PR1.*
+            FROM RecordOrders AS RO1, ProgramRanks AS PR1
+            WHERE (RO1.title = PR1.title AND RO1.hID = PR1.hID)
+            UNION
+            SELECT DISTINCT PR1.*
+            FROM RecordReturns AS RR1, ProgramRanks AS PR1
+            WHERE (RR1.title = PR1.title AND RR1.hID = PR1.hID)
+            """
+        )
 
-            cursor.execute(
-                """
-               CREATE VIEW AtLeast3Kosher
-                AS
-                SELECT KR1.title
-                FROM KosherRank AS KR1
-                WHERE KR1.title IN (SELECT KR2.title
-                                    FROM KosherRank AS KR2
-                                    GROUP BY KR2.title
-                                    HAVING COUNT(KR2.rank) >= 3)
-                GROUP BY KR1.title
-                """
-            )
-            flag2 = True
+        cursor.execute(
+            """
+           CREATE VIEW AtLeast3Kosher
+            AS
+            SELECT KR1.title
+            FROM KosherRank AS KR1
+            WHERE KR1.title IN (SELECT KR2.title
+                                FROM KosherRank AS KR2
+                                GROUP BY KR2.title
+                                HAVING COUNT(KR2.rank) >= 3)
+            GROUP BY KR1.title
+            """
+        )
 
         cursor.execute(
             """
@@ -124,66 +115,63 @@ def Query_results(request):
 
         # Query 3
 
-        if not flag3:
+        cursor.execute(
+            """
+          CREATE VIEW RecordReturnAtLeast10
+            AS
+            SELECT RR1.title, RR1.hID, H1.netWorth
+            FROM RecordReturns AS RR1, Households as H1
+            WHERE RR1.title IN (SELECT RR2.title
+                                FROM RecordReturns AS RR2
+                                GROUP BY RR2.title
+                                HAVING COUNT(DISTINCT RR2.hID) >= 10)
+            AND RR1.hID = H1.hID
+            """
+        )
 
-            cursor.execute(
-                """
-              CREATE VIEW RecordReturnAtLeast10
-                AS
-                SELECT RR1.title, RR1.hID, H1.netWorth
-                FROM RecordReturns AS RR1, Households as H1
-                WHERE RR1.title IN (SELECT RR2.title
-                                    FROM RecordReturns AS RR2
-                                    GROUP BY RR2.title
-                                    HAVING COUNT(DISTINCT RR2.hID) >= 10)
-                AND RR1.hID = H1.hID
-                """
-            )
+        cursor.execute(
+            """
+          CREATE VIEW Temp
+            AS
+            SELECT RR1.title, COUNT(RR1.hID)/2 as CountFamily
+            FROM RecordReturnAtLeast10 AS RR1
+            GROUP BY RR1.title
+            """
+        )
 
-            cursor.execute(
-                """
-              CREATE VIEW Temp
-                AS
-                SELECT RR1.title, COUNT(RR1.hID)/2 as CountFamily
-                FROM RecordReturnAtLeast10 AS RR1
-                GROUP BY RR1.title
-                """
-            )
+        cursor.execute(
+            """
+            CREATE VIEW Temp2
+            AS
+            SELECT RR1.title, COUNT(RR1.hID) as CountFamily
+            FROM RecordReturnAtLeast10 AS RR1
+            WHERE RR1.netWorth >= 8
+            GROUP BY RR1.title
+            """
+        )
 
-            cursor.execute(
-                """
-                CREATE VIEW Temp2
-                AS
-                SELECT RR1.title, COUNT(RR1.hID) as CountFamily
-                FROM RecordReturnAtLeast10 AS RR1
-                WHERE RR1.netWorth >= 8
-                GROUP BY RR1.title
-                """
-            )
-
-            cursor.execute(
-                """
-              CREATE VIEW LuxuriousTvShow
-                AS
-                SELECT T1.title
-                FROM Temp AS T1, Temp2 AS T2
-                WHERE T1.title = T2.title and T2.CountFamily > T1.CountFamily
-                GROUP BY T1.title
-                """
-            )
+        cursor.execute(
+            """
+          CREATE VIEW LuxuriousTvShow
+            AS
+            SELECT T1.title
+            FROM Temp AS T1, Temp2 AS T2
+            WHERE T1.title = T2.title and T2.CountFamily > T1.CountFamily
+            GROUP BY T1.title
+            """
+        )
 
 
 
-            cursor.execute(
-                """
-              CREATE VIEW Temp3
-                AS
-                SELECT PR1.*
-                FROM ProgramRanks as PR1, LuxuriousTvShow as LTS1
-                WHERE PR1.title = LTS1.title and PR1.rank < 2
-                """
-            )
-            flag3 = True
+        cursor.execute(
+            """
+          CREATE VIEW Temp3
+            AS
+            SELECT PR1.*
+            FROM ProgramRanks as PR1, LuxuriousTvShow as LTS1
+            WHERE PR1.title = LTS1.title and PR1.rank < 2
+            """
+        )
 
         cursor.execute(
             """
@@ -196,11 +184,25 @@ def Query_results(request):
 
         sql_res3 = dictfetchall(cursor)
 
+        cursor.execute(
+            """
+            DROP VIEW AtLeast3Kosher;
+            DROP VIEW KosherRank;
+            DROP VIEW LongestSHowPerGenre;
+            DROP VIEW LSGNoDuplicate;
+            DROP VIEW LuxuriousTvShow;
+            DROP VIEW noChildren;
+            DROP VIEW RecordReturnAtLeast10;
+            DROP VIEW Temp;
+            DROP VIEW Temp2;
+            DROP VIEW Temp3;
+            """
+        )
+
         return render(request, 'Query_results.html', {'sql_res1': sql_res1, 'sql_res2': sql_res2, 'sql_res3': sql_res3})
 
 
 def Records_management(request):
-
     if not request.POST:
         with connection.cursor() as cursor:
             cursor.execute(
@@ -412,15 +414,67 @@ def Records_management(request):
                 return render(request, 'Records_management.html', {'success_return': 'Order successfully returned!', 'table': table})
 
 
-
-
-
-
-
-
-
-
 def Rankings(request):
-    return render(request, 'Rankings.html')
+    if not request.POST:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT genre
+                FROM Programs AS P1
+                GROUP BY genre
+                HAVING COUNT(P1.title) >= 5
+                """
+            )
+            genres = dictfetchall(cursor)
+            return render(request, 'Rankings.html', {'genres': genres})
+
+    else:
+        with connection.cursor() as cursor:
+            if request.POST and request.POST.get('hID_selected') \
+                    and request.POST.get('title_selected') \
+                    and request.POST.get('rank_selected') :
+                title_selected = request.POST.get('title_selected')
+                hID_selected = request.POST.get('hID_selected')
+                rank_selected = request.POST.get('rank_selected')
+
+                cursor.execute(
+                    f"""
+                        SELECT PR1.rank
+                        FROM ProgramRanks AS PR1
+                        WHERE PR1.hID = {hID_selected} and PR1.title = '{title_selected}'
+                    """
+                )
+                hIDOrder = dictfetchall(cursor)
+
+                if not hIDOrder:
+                    cursor.execute(
+                        f"""
+                            INSERT INTO ProgramRanks (title, hID, rank) VALUES ('{title_selected}', {hID_selected}, {rank_selected});
+                        """
+                    )
+                else:
+                    cursor.execute(
+                        f"""
+                        UPDATE ProgramRanks
+                        SET rank = {rank_selected}
+                        WHERE hID = {hID_selected} AND title = '{title_selected}';
+                        """
+                    )
+
+                return render(request, 'Rankings.html')
+
+            if request.POST and request.POST.get('min_rank'):
+                min_rank = request.POST.get('min_rank')
+                cursor.execute(
+                    f"""
+                    SELECT TOP 5 PR1.title, COUNT(PR1.rank) as count
+                    FROM ProgramRanks AS PR1
+                    GROUP BY PR1.title
+                    HAVING COUNT(*) >= {min_rank}
+                    ORDER BY count DESC, title
+                    """
+                )
+                minimum_rank = dictfetchall(cursor)
+                return render(request, 'Rankings.html', {'minimum_rank': minimum_rank})
 
 

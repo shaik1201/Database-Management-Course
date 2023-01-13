@@ -47,8 +47,8 @@
 
 <form method="post">
     {% csrf_token %}
-    hID:<input type="number" name="hID_return"> <br>
-    title:<input type="text" name="title_return"> <br>
+    hID:<input type="number" name="hID_return" required> <br>
+    title:<input type="text" name="title_return" required> <br>
     <input type="submit">
 </form>
 
@@ -70,7 +70,7 @@
 
         {% for content in table %}
             <tr>
-                <td>{{ content.hID }}</td>
+                <td>{{ content.hID}}</td>
                 <td>{{ content.count }}</td>
             </tr>
         {% endfor %}
